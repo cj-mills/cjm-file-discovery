@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "cjm-file-discovery"
+  site-url: "https://cj-mills.github.io/cjm-file-discovery"
+  description: "Pure Python library for batch file scanning with configurable filtering, metadata extraction, caching, and extensible provider support."
+  repo-branch: main
+  repo-url: "https://github.com/cj-mills/cjm-file-discovery"
