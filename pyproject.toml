@@ -1,11 +1,30 @@
 [build-system]
-requires = ["setuptools>=64.0"]
+requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name="cjm-file-discovery"
-requires-python=">=3.12"
-dynamic = [ "keywords", "description", "version", "dependencies", "optional-dependencies", "readme", "license", "authors", "classifiers", "entry-points", "scripts", "urls"]
+name = "cjm-file-discovery"
+dynamic = ["version"]
+description = "Pure Python library for batch file scanning with configurable filtering, metadata extraction, caching, and extensible provider support."
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "Apache-2.0"}
+authors = [{name = "Christian J. Mills", email = "9126128+cj-mills@users.noreply.github.com"}]
+keywords = ['nbdev', 'jupyter', 'notebook', 'python']
+classifiers = ["Natural Language :: English", "Intended Audience :: Developers", "Development Status :: 3 - Alpha", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only"]
+dependencies = []
 
-[tool.uv]
-cache-keys = [{ file = "pyproject.toml" }, { file = "settings.ini" }, { file = "setup.py" }]
+[project.urls]
+Repository = "https://github.com/cj-mills/cjm-file-discovery"
+Documentation = "https://cj-mills.github.io/cjm-file-discovery"
+
+[project.entry-points.nbdev]
+cjm_file_discovery = "cjm_file_discovery._modidx:d"
+
+[tool.setuptools.dynamic]
+version = {attr = "cjm_file_discovery.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["cjm_file_discovery"]
+
+[tool.nbdev]
