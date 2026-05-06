@@ -1,0 +1,337 @@
+[
+  {
+    "objectID": "cache/memory.html",
+    "href": "cache/memory.html",
+    "title": "Memory Cache",
+    "section": "",
+    "text": "In-memory cache for scan results with time-based expiration.\n\n\n\n\ndef ScanCache(\n    duration_seconds:int=300, _files:List=&lt;factory&gt;, _timestamp:Optional=None\n)-&gt;None:\n\nIn-memory cache for scan results with time-based expiration.\n\nfrom cjm_file_discovery.core.models import FileType\n\n# Test ScanCache\ncache = ScanCache(duration_seconds=2)\n\n# Initially invalid\nassert cache.is_valid() == False\nassert cache.get() is None\nassert cache.file_count == 0\n\n# Set some files\ntest_files = [\n    FileInfo(name=\"test1.txt\", path=\"/test1.txt\", is_directory=False),\n    FileInfo(name=\"test2.mp3\", path=\"/test2.mp3\", is_directory=False, file_type=FileType.AUDIO),\n]\ncache.set(test_files)\n\n# Now valid\nassert cache.is_valid() == True\nassert cache.get() == test_files\nassert cache.file_count == 2\nassert cache.age_seconds is not None and cache.age_seconds &lt; 1\n\n# Clear\ncache.clear()\nassert cache.is_valid() == False\nassert cache.get() is None\n\nprint(\"ScanCache tests passed!\")\n\nScanCache tests passed!",
+    "crumbs": [
+      "cache",
+      "Memory Cache"
+    ]
+  },
+  {
+    "objectID": "cache/memory.html#scancache",
+    "href": "cache/memory.html#scancache",
+    "title": "Memory Cache",
+    "section": "",
+    "text": "In-memory cache for scan results with time-based expiration.\n\n\n\n\ndef ScanCache(\n    duration_seconds:int=300, _files:List=&lt;factory&gt;, _timestamp:Optional=None\n)-&gt;None:\n\nIn-memory cache for scan results with time-based expiration.\n\nfrom cjm_file_discovery.core.models import FileType\n\n# Test ScanCache\ncache = ScanCache(duration_seconds=2)\n\n# Initially invalid\nassert cache.is_valid() == False\nassert cache.get() is None\nassert cache.file_count == 0\n\n# Set some files\ntest_files = [\n    FileInfo(name=\"test1.txt\", path=\"/test1.txt\", is_directory=False),\n    FileInfo(name=\"test2.mp3\", path=\"/test2.mp3\", is_directory=False, file_type=FileType.AUDIO),\n]\ncache.set(test_files)\n\n# Now valid\nassert cache.is_valid() == True\nassert cache.get() == test_files\nassert cache.file_count == 2\nassert cache.age_seconds is not None and cache.age_seconds &lt; 1\n\n# Clear\ncache.clear()\nassert cache.is_valid() == False\nassert cache.get() is None\n\nprint(\"ScanCache tests passed!\")\n\nScanCache tests passed!",
+    "crumbs": [
+      "cache",
+      "Memory Cache"
+    ]
+  },
+  {
+    "objectID": "scanning/scanner.html",
+    "href": "scanning/scanner.html",
+    "title": "Scanner",
+    "section": "",
+    "text": "High-level file scanner with caching, sorting, and summary statistics.\n\n\n\n\ndef FileScanner(\n    config:ScanConfig, # Scan configuration\n    provider:Optional=None, # Discovery provider (defaults to LocalDiscoveryProvider)\n):\n\nHigh-level file scanner with caching and provider support.\n\nimport tempfile\nfrom pathlib import Path\n\nfrom cjm_file_discovery.core.config import FilterConfig\n\n# Test FileScanner with a temporary directory\nwith tempfile.TemporaryDirectory() as tmpdir:\n    # Create test files\n    (Path(tmpdir) / \"script.py\").write_text(\"print('hello')\")\n    (Path(tmpdir) / \"data.json\").write_text('{\"key\": \"value\"}')\n    (Path(tmpdir) / \"readme.txt\").write_text(\"This is a readme\")\n    (Path(tmpdir) / \"song.mp3\").write_bytes(b\"\\x00\" * 1024)  # 1KB fake mp3\n    \n    # Create scanner\n    config = ScanConfig(\n        directories=[tmpdir],\n        recursive=True,\n        cache_results=True,\n        cache_duration_seconds=60,\n        sort_by=\"name\"\n    )\n    scanner = FileScanner(config)\n    \n    # Test scan\n    files = scanner.scan()\n    assert len(files) == 4\n    assert files[0].name == \"data.json\"  # Sorted by name\n    \n    # Test caching\n    assert scanner.cache_valid == True\n    assert scanner.cached_file_count == 4\n    \n    # Second scan should use cache\n    files2 = scanner.scan()\n    assert len(files2) == 4\n    \n    # Force refresh\n    files3 = scanner.scan(force_refresh=True)\n    assert len(files3) == 4\n    \n    # Test get_files_by_type\n    audio_files = scanner.get_files_by_type([FileType.AUDIO])\n    assert len(audio_files) == 1\n    assert audio_files[0].name == \"song.mp3\"\n    \n    code_files = scanner.get_files_by_type([FileType.CODE])\n    assert len(code_files) == 1\n    assert code_files[0].name == \"script.py\"\n    \n    # Test get_summary\n    summary = scanner.get_summary()\n    assert summary['total_files'] == 4\n    assert summary['total_size'] &gt; 0\n    assert 'by_type' in summary\n    assert 'by_extension' in summary\n    assert summary['cache_valid'] == True\n    \n    # Test clear_cache\n    scanner.clear_cache()\n    assert scanner.cache_valid == False\n\nprint(\"FileScanner tests passed!\")\n\nFileScanner tests passed!",
+    "crumbs": [
+      "scanning",
+      "Scanner"
+    ]
+  },
+  {
+    "objectID": "scanning/scanner.html#filescanner",
+    "href": "scanning/scanner.html#filescanner",
+    "title": "Scanner",
+    "section": "",
+    "text": "High-level file scanner with caching, sorting, and summary statistics.\n\n\n\n\ndef FileScanner(\n    config:ScanConfig, # Scan configuration\n    provider:Optional=None, # Discovery provider (defaults to LocalDiscoveryProvider)\n):\n\nHigh-level file scanner with caching and provider support.\n\nimport tempfile\nfrom pathlib import Path\n\nfrom cjm_file_discovery.core.config import FilterConfig\n\n# Test FileScanner with a temporary directory\nwith tempfile.TemporaryDirectory() as tmpdir:\n    # Create test files\n    (Path(tmpdir) / \"script.py\").write_text(\"print('hello')\")\n    (Path(tmpdir) / \"data.json\").write_text('{\"key\": \"value\"}')\n    (Path(tmpdir) / \"readme.txt\").write_text(\"This is a readme\")\n    (Path(tmpdir) / \"song.mp3\").write_bytes(b\"\\x00\" * 1024)  # 1KB fake mp3\n    \n    # Create scanner\n    config = ScanConfig(\n        directories=[tmpdir],\n        recursive=True,\n        cache_results=True,\n        cache_duration_seconds=60,\n        sort_by=\"name\"\n    )\n    scanner = FileScanner(config)\n    \n    # Test scan\n    files = scanner.scan()\n    assert len(files) == 4\n    assert files[0].name == \"data.json\"  # Sorted by name\n    \n    # Test caching\n    assert scanner.cache_valid == True\n    assert scanner.cached_file_count == 4\n    \n    # Second scan should use cache\n    files2 = scanner.scan()\n    assert len(files2) == 4\n    \n    # Force refresh\n    files3 = scanner.scan(force_refresh=True)\n    assert len(files3) == 4\n    \n    # Test get_files_by_type\n    audio_files = scanner.get_files_by_type([FileType.AUDIO])\n    assert len(audio_files) == 1\n    assert audio_files[0].name == \"song.mp3\"\n    \n    code_files = scanner.get_files_by_type([FileType.CODE])\n    assert len(code_files) == 1\n    assert code_files[0].name == \"script.py\"\n    \n    # Test get_summary\n    summary = scanner.get_summary()\n    assert summary['total_files'] == 4\n    assert summary['total_size'] &gt; 0\n    assert 'by_type' in summary\n    assert 'by_extension' in summary\n    assert summary['cache_valid'] == True\n    \n    # Test clear_cache\n    scanner.clear_cache()\n    assert scanner.cache_valid == False\n\nprint(\"FileScanner tests passed!\")\n\nFileScanner tests passed!",
+    "crumbs": [
+      "scanning",
+      "Scanner"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "cjm-file-discovery",
+    "section": "",
+    "text": "pip install cjm_file_discovery",
+    "crumbs": [
+      "cjm-file-discovery"
+    ]
+  },
+  {
+    "objectID": "index.html#install",
+    "href": "index.html#install",
+    "title": "cjm-file-discovery",
+    "section": "",
+    "text": "pip install cjm_file_discovery",
+    "crumbs": [
+      "cjm-file-discovery"
+    ]
+  },
+  {
+    "objectID": "index.html#project-structure",
+    "href": "index.html#project-structure",
+    "title": "cjm-file-discovery",
+    "section": "Project Structure",
+    "text": "Project Structure\nnbs/\n├── cache/ (1)\n│   └── memory.ipynb  # In-memory caching for scan results.\n├── core/ (3)\n│   ├── config.ipynb     # Configuration dataclasses for file scanning including ScanConfig, FilterConfig, and ExtensionMapping.\n│   ├── models.ipynb     # Core data models for file discovery including FileInfo, FileType, and DirectoryInfo.\n│   └── protocols.ipynb  # Protocol definitions for extensible file discovery providers.\n├── providers/ (1)\n│   └── local.ipynb  # Local file system discovery provider implementation.\n├── scanning/ (2)\n│   ├── filters.ipynb  # Filter implementations for file discovery.\n│   └── scanner.ipynb  # High-level FileScanner class with caching and provider support.\n└── utils/ (1)\n    └── formatting.ipynb  # Utility functions for formatting file sizes, timestamps, and other display values.\nTotal: 8 notebooks across 5 directories",
+    "crumbs": [
+      "cjm-file-discovery"
+    ]
+  },
+  {
+    "objectID": "index.html#module-dependencies",
+    "href": "index.html#module-dependencies",
+    "title": "cjm-file-discovery",
+    "section": "Module Dependencies",
+    "text": "Module Dependencies\ngraph LR\n    cache_memory[cache.memory&lt;br/&gt;Memory Cache]\n    core_config[core.config&lt;br/&gt;Configuration]\n    core_models[core.models&lt;br/&gt;Models]\n    core_protocols[core.protocols&lt;br/&gt;Protocols]\n    providers_local[providers.local&lt;br/&gt;Local Provider]\n    scanning_filters[scanning.filters&lt;br/&gt;Filters]\n    scanning_scanner[scanning.scanner&lt;br/&gt;Scanner]\n    utils_formatting[utils.formatting&lt;br/&gt;Formatting Utilities]\n\n    cache_memory --&gt; core_models\n    core_config --&gt; core_models\n    core_models --&gt; utils_formatting\n    core_protocols --&gt; core_config\n    core_protocols --&gt; core_models\n    providers_local --&gt; core_config\n    providers_local --&gt; core_protocols\n    providers_local --&gt; core_models\n    providers_local --&gt; utils_formatting\n    scanning_filters --&gt; core_config\n    scanning_filters --&gt; core_models\n    scanning_scanner --&gt; utils_formatting\n    scanning_scanner --&gt; cache_memory\n    scanning_scanner --&gt; core_models\n    scanning_scanner --&gt; scanning_filters\n    scanning_scanner --&gt; core_config\n    scanning_scanner --&gt; providers_local\n17 cross-module dependencies detected",
+    "crumbs": [
+      "cjm-file-discovery"
+    ]
+  },
+  {
+    "objectID": "index.html#cli-reference",
+    "href": "index.html#cli-reference",
+    "title": "cjm-file-discovery",
+    "section": "CLI Reference",
+    "text": "CLI Reference\nNo CLI commands found in this project.",
+    "crumbs": [
+      "cjm-file-discovery"
+    ]
+  },
+  {
+    "objectID": "index.html#module-overview",
+    "href": "index.html#module-overview",
+    "title": "cjm-file-discovery",
+    "section": "Module Overview",
+    "text": "Module Overview\nDetailed documentation for each module in the project:\n\nConfiguration (config.ipynb)\n\nConfiguration dataclasses for file scanning including ScanConfig, FilterConfig, and ExtensionMapping.\n\n\nImport\nfrom cjm_file_discovery.core.config import (\n    ExtensionMapping,\n    FilterConfig,\n    ScanConfig\n)\n\n\nClasses\n@dataclass\nclass ExtensionMapping:\n    \"Maps file extensions to FileType categories.\"\n    \n    audio: List[str] = field(...)\n    video: List[str] = field(...)\n    image: List[str] = field(...)\n    document: List[str] = field(...)\n    code: List[str] = field(...)\n    data: List[str] = field(...)\n    archive: List[str] = field(...)\n    \n    def get_type(\n            self,\n            extension: str  # File extension (with or without dot)\n        ) -&gt; FileType:  # Corresponding FileType\n        \"Get FileType for an extension.\"\n    \n    def build_extension_map(self) -&gt; Dict[str, FileType]:  # Mapping of extension to FileType\n            \"\"\"Build reverse mapping from extension to FileType.\"\"\"\n            ext_map = {}\n            for ext in self.audio\n        \"Build reverse mapping from extension to FileType.\"\n    \n    def get_all_extensions(self) -&gt; Set[str]:  # Set of all known extensions\n        \"Get all configured extensions.\"\n@dataclass\nclass FilterConfig:\n    \"Configuration for filtering files during discovery.\"\n    \n    extensions: Optional[List[str]]  # Include only these extensions (None = all)\n    exclude_extensions: Optional[List[str]]  # Exclude these extensions\n    file_types: Optional[List[FileType]]  # Include only these types (None = all)\n    min_size: Optional[int]  # Minimum file size (bytes)\n    max_size: Optional[int]  # Maximum file size (bytes)\n    exclude_patterns: List[str] = field(...)  # Glob patterns to exclude\n    include_hidden: bool = False  # Include hidden files/directories\n    custom_filter: Optional[Callable[[FileInfo], bool]]  # Custom filter function\n    \n    def matches(\n            self,\n            file_info: FileInfo,  # File to check\n            extension_mapping: Optional[ExtensionMapping] = None  # For type checking\n        ) -&gt; bool:  # True if file passes all filters\n        \"Check if a file matches all filter criteria.\"\n@dataclass\nclass ScanConfig:\n    \"Main configuration for file scanning operations.\"\n    \n    directories: List[str] = field(...)  # Directories to scan\n    recursive: bool = True  # Scan subdirectories\n    max_depth: Optional[int]  # Maximum recursion depth (None = unlimited)\n    follow_symlinks: bool = False  # Follow symbolic links\n    filter_config: FilterConfig = field(...)\n    extension_mapping: ExtensionMapping = field(...)\n    cache_results: bool = True\n    cache_duration_seconds: int = 300  # 5 minutes default\n    max_results: Optional[int]  # Maximum files to return (None = unlimited)\n    sort_by: str = 'name'  # name, size, modified, type\n    sort_descending: bool = False\n\n\n\nFilters (filters.ipynb)\n\nFilter implementations for file discovery.\n\n\nImport\nfrom cjm_file_discovery.scanning.filters import (\n    filter_files,\n    sort_files,\n    limit_files\n)\n\n\nFunctions\ndef filter_files(\n    files: List[FileInfo],      # Files to filter\n    config: FilterConfig        # Filter configuration\n) -&gt; List[FileInfo]:  # Filtered files\n    \"Filter a list of files using FilterConfig.\"\ndef sort_files(\n    files: List[FileInfo],      # Files to sort\n    sort_by: str = \"name\",      # Sort key: \"name\", \"size\", \"modified\", \"type\"\n    descending: bool = False    # Sort in descending order\n) -&gt; List[FileInfo]:  # Sorted files\n    \"Sort a list of files by the specified key.\"\ndef limit_files(\n    files: List[FileInfo],       # Files to limit\n    max_results: Optional[int]   # Maximum number of results (None = no limit)\n) -&gt; List[FileInfo]:  # Limited file list\n    \"Limit the number of files returned.\"\n\n\n\nFormatting Utilities (formatting.ipynb)\n\nUtility functions for formatting file sizes, timestamps, and other display values.\n\n\nImport\nfrom cjm_file_discovery.utils.formatting import (\n    format_file_size,\n    format_timestamp,\n    matches_glob_patterns,\n    get_mime_type\n)\n\n\nFunctions\ndef format_file_size(\n    size_bytes: int  # Size in bytes\n) -&gt; str:  # Human-readable size string (e.g., \"15.2 MB\")\n    \"Format file size in human-readable format.\"\ndef format_timestamp(\n    timestamp: float  # Unix timestamp\n) -&gt; str:  # Human-readable date string\n    \"Format timestamp to human-readable date with relative time for recent files.\"\ndef matches_glob_patterns(\n    path: str,  # File path to check\n    patterns: List[str]  # List of glob patterns to match against\n) -&gt; bool:  # True if path matches any pattern\n    \"Check if path matches any of the glob patterns.\"\ndef get_mime_type(\n    path: str  # File path to check\n) -&gt; Optional[str]:  # MIME type string or None if unknown\n    \"Determine MIME type for a file based on extension.\"\n\n\n\nLocal Provider (local.ipynb)\n\nLocal file system discovery provider implementation.\n\n\nImport\nfrom cjm_file_discovery.providers.local import (\n    LocalDiscoveryProvider\n)\n\n\nClasses\nclass LocalDiscoveryProvider:\n    \"Local file system discovery provider.\"\n    \n    def name(self) -&gt; str:  # Provider identifier\n            \"\"\"Provider identifier.\"\"\"\n            return \"local\"\n    \n        def supports_path(\n            self,\n            path: str  # Path to check\n        ) -&gt; bool:  # True if this is a local path\n        \"Provider identifier.\"\n    \n    def supports_path(\n            self,\n            path: str  # Path to check\n        ) -&gt; bool:  # True if this is a local path\n        \"Check if this provider can handle the given path.\"\n    \n    def get_file_info(\n            self,\n            path: str,  # Path to file\n            extension_mapping: Optional[ExtensionMapping] = None  # For type detection\n        ) -&gt; Optional[FileInfo]:  # FileInfo or None if not found\n        \"Get metadata for a single file.\"\n    \n    def scan(\n            self,\n            directories: List[str],  # Directories to scan\n            config: ScanConfig       # Scan configuration\n        ) -&gt; List[FileInfo]:  # List of discovered files\n        \"Scan directories for files.\"\n    \n    async def scan_async(\n            self,\n            directories: List[str],  # Directories to scan\n            config: ScanConfig       # Scan configuration\n        ) -&gt; List[FileInfo]:  # List of discovered files\n        \"Async scan for files (runs sync scan in executor).\"\n\n\n\nMemory Cache (memory.ipynb)\n\nIn-memory caching for scan results.\n\n\nImport\nfrom cjm_file_discovery.cache.memory import (\n    ScanCache\n)\n\n\nClasses\n@dataclass\nclass ScanCache:\n    \"In-memory cache for scan results with time-based expiration.\"\n    \n    duration_seconds: int = 300  # Cache duration (default 5 minutes)\n    _files: List[FileInfo] = field(...)\n    _timestamp: Optional[float] = field(...)\n    \n    def is_valid(self) -&gt; bool:  # True if cache is valid and not expired\n            \"\"\"Check if cache is valid and not expired.\"\"\"\n            if self._timestamp is None\n        \"Check if cache is valid and not expired.\"\n    \n    def get(self) -&gt; Optional[List[FileInfo]]:  # Cached files or None if invalid\n            \"\"\"Get cached files if valid.\"\"\"\n            if self.is_valid()\n        \"Get cached files if valid.\"\n    \n    def set(\n            self,\n            files: List[FileInfo]  # Files to cache\n        ) -&gt; None\n        \"Update cache with new files.\"\n    \n    def clear(self) -&gt; None:\n            \"\"\"Clear the cache.\"\"\"\n            self._files = []\n            self._timestamp = None\n    \n        @property\n        def age_seconds(self) -&gt; Optional[float]:  # Age in seconds or None if not set\n        \"Clear the cache.\"\n    \n    def age_seconds(self) -&gt; Optional[float]:  # Age in seconds or None if not set\n            \"\"\"Get cache age in seconds.\"\"\"\n            if self._timestamp is None\n        \"Get cache age in seconds.\"\n    \n    def file_count(self) -&gt; int:  # Number of cached files\n        \"Get number of cached files.\"\n\n\n\nModels (models.ipynb)\n\nCore data models for file discovery including FileInfo, FileType, and DirectoryInfo.\n\n\nImport\nfrom cjm_file_discovery.core.models import (\n    FileType,\n    FileInfo,\n    DirectoryInfo\n)\n\n\nClasses\nclass FileType(str, Enum):\n    \"File type categories.\"\n@dataclass\nclass FileInfo:\n    \"Metadata for a discovered file or directory.\"\n    \n    name: str  # File name with extension\n    path: str  # Full path (provider-specific format)\n    is_directory: bool  # True for directories\n    size: Optional[int]  # Size in bytes\n    modified: Optional[float]  # Last modified timestamp (Unix)\n    created: Optional[float]  # Creation timestamp (if available)\n    file_type: FileType = FileType.OTHER  # Categorized file type\n    extension: Optional[str]  # File extension (without dot)\n    mime_type: Optional[str]  # MIME type (if determinable)\n    provider_name: str = 'local'  # Source provider identifier\n    metadata: Dict[str, Any] = field(...)  # Provider-specific extras\n    \n    def size_str(self) -&gt; str:  # Human-readable size string\n            \"\"\"Human-readable size string (e.g., '15.2 MB').\"\"\"\n            if self.size is None\n        \"Human-readable size string (e.g., '15.2 MB').\"\n    \n    def modified_str(self) -&gt; str:  # Human-readable modified date\n            \"\"\"Human-readable modified date.\"\"\"\n            if self.modified is None\n        \"Human-readable modified date.\"\n@dataclass\nclass DirectoryInfo:\n    \"Metadata for a directory with optional computed statistics.\"\n    \n    path: str  # Full directory path\n    name: str  # Directory name\n    item_count: Optional[int]  # Number of direct children\n    total_size: Optional[int]  # Total size of contents (bytes)\n    file_count: Optional[int]  # Number of files (recursive)\n    directory_count: Optional[int]  # Number of subdirectories\n    \n    def total_size_str(self) -&gt; str:  # Human-readable total size\n            \"\"\"Human-readable total size string.\"\"\"\n            if self.total_size is None\n        \"Human-readable total size string.\"\n\n\n\nProtocols (protocols.ipynb)\n\nProtocol definitions for extensible file discovery providers.\n\n\nImport\nfrom cjm_file_discovery.core.protocols import (\n    DiscoveryProvider\n)\n\n\nClasses\n@runtime_checkable\nclass DiscoveryProvider(Protocol):\n    \"Protocol for file discovery backends.\"\n    \n    def name(self) -&gt; str:  # Unique identifier for this provider\n            \"\"\"Unique identifier for this provider (e.g., 'local', 's3').\"\"\"\n            ...\n    \n        def scan(\n            self,\n            directories: List[str],  # Directories to scan\n            config: ScanConfig        # Scan configuration\n        ) -&gt; List[FileInfo]:  # List of discovered files\n        \"Unique identifier for this provider (e.g., 'local', 's3').\"\n    \n    def scan(\n            self,\n            directories: List[str],  # Directories to scan\n            config: ScanConfig        # Scan configuration\n        ) -&gt; List[FileInfo]:  # List of discovered files\n        \"Scan directories for files matching config.\"\n    \n    async def scan_async(\n            self,\n            directories: List[str],  # Directories to scan\n            config: ScanConfig        # Scan configuration\n        ) -&gt; List[FileInfo]:  # List of discovered files\n        \"Async scan for files.\"\n    \n    def get_file_info(\n            self,\n            path: str  # Path to file\n        ) -&gt; Optional[FileInfo]:  # FileInfo or None if not found\n        \"Get metadata for a single file.\"\n    \n    def supports_path(\n            self,\n            path: str  # Path to check\n        ) -&gt; bool:  # True if this provider can handle the path\n        \"Check if this provider can handle the given path.\"\n\n\n\nScanner (scanner.ipynb)\n\nHigh-level FileScanner class with caching and provider support.\n\n\nImport\nfrom cjm_file_discovery.scanning.scanner import (\n    FileScanner\n)\n\n\nClasses\nclass FileScanner:\n    def __init__(\n        self,\n        config: ScanConfig,  # Scan configuration\n        provider: Optional[Any] = None  # Discovery provider (defaults to LocalDiscoveryProvider)\n    )\n    \"High-level file scanner with caching and provider support.\"\n    \n    def __init__(\n            self,\n            config: ScanConfig,  # Scan configuration\n            provider: Optional[Any] = None  # Discovery provider (defaults to LocalDiscoveryProvider)\n        )\n        \"Initialize the scanner.\"\n    \n    def scan(\n            self,\n            force_refresh: bool = False  # Force fresh scan, ignoring cache\n        ) -&gt; List[FileInfo]:  # List of discovered files\n        \"Scan for files, using cache if valid.\"\n    \n    async def scan_async(\n            self,\n            force_refresh: bool = False  # Force fresh scan, ignoring cache\n        ) -&gt; List[FileInfo]:  # List of discovered files\n        \"Async scan for files.\"\n    \n    def get_files_by_type(\n            self,\n            file_types: List[FileType]  # File types to filter by\n        ) -&gt; List[FileInfo]:  # Filtered files\n        \"Get files filtered by specific file types.\"\n    \n    def clear_cache(self) -&gt; None:\n            \"\"\"Clear the scan cache.\"\"\"\n            self._cache.clear()\n    \n        @property\n        def cache_valid(self) -&gt; bool:  # True if cache is valid\n        \"Clear the scan cache.\"\n    \n    def cache_valid(self) -&gt; bool:  # True if cache is valid\n            \"\"\"Check if cache is valid.\"\"\"\n            return self._cache.is_valid()\n    \n        @property\n        def cached_file_count(self) -&gt; int:  # Number of cached files\n        \"Check if cache is valid.\"\n    \n    def cached_file_count(self) -&gt; int:  # Number of cached files\n            \"\"\"Get number of cached files.\"\"\"\n            return self._cache.file_count\n    \n        def get_summary(self) -&gt; Dict[str, Any]:  # Summary statistics\n        \"Get number of cached files.\"\n    \n    def get_summary(self) -&gt; Dict[str, Any]:  # Summary statistics\n            \"\"\"Get summary statistics for scanned files.\"\"\"\n            files = self.scan()\n    \n            # Total stats\n            total_size = sum(f.size for f in files if f.size is not None)\n    \n            # By type breakdown\n            by_type: Dict[str, int] = {}\n        \"Get summary statistics for scanned files.\"",
+    "crumbs": [
+      "cjm-file-discovery"
+    ]
+  },
+  {
+    "objectID": "core/models.html",
+    "href": "core/models.html",
+    "title": "Models",
+    "section": "",
+    "text": "File type categories for categorizing discovered files.\n\n\n\n\ndef FileType(\n    args:VAR_POSITIONAL, kwds:VAR_KEYWORD\n):\n\nFile type categories.\n\n# Test FileType enum\nassert FileType.AUDIO.value == \"audio\"\nassert FileType.VIDEO == \"video\"  # str enum comparison\nassert str(FileType.IMAGE.value) == \"image\"\nprint(\"FileType enum tests passed!\")\n\nFileType enum tests passed!",
+    "crumbs": [
+      "core",
+      "Models"
+    ]
+  },
+  {
+    "objectID": "core/models.html#filetype-enum",
+    "href": "core/models.html#filetype-enum",
+    "title": "Models",
+    "section": "",
+    "text": "File type categories for categorizing discovered files.\n\n\n\n\ndef FileType(\n    args:VAR_POSITIONAL, kwds:VAR_KEYWORD\n):\n\nFile type categories.\n\n# Test FileType enum\nassert FileType.AUDIO.value == \"audio\"\nassert FileType.VIDEO == \"video\"  # str enum comparison\nassert str(FileType.IMAGE.value) == \"image\"\nprint(\"FileType enum tests passed!\")\n\nFileType enum tests passed!",
+    "crumbs": [
+      "core",
+      "Models"
+    ]
+  },
+  {
+    "objectID": "core/models.html#fileinfo",
+    "href": "core/models.html#fileinfo",
+    "title": "Models",
+    "section": "FileInfo",
+    "text": "FileInfo\nMetadata for a discovered file or directory.\n\n\nFileInfo\n\ndef FileInfo(\n    name:str, path:str, is_directory:bool, size:Optional=None, modified:Optional=None, created:Optional=None,\n    file_type:FileType=&lt;FileType.OTHER: 'other'&gt;, extension:Optional=None, mime_type:Optional=None,\n    provider_name:str='local', metadata:Dict=&lt;factory&gt;\n)-&gt;None:\n\nMetadata for a discovered file or directory.\n\nimport time\n\n# Test FileInfo\nfile_info = FileInfo(\n    name=\"test.mp3\",\n    path=\"/path/to/test.mp3\",\n    is_directory=False,\n    size=1572864,\n    modified=time.time(),\n    file_type=FileType.AUDIO,\n    extension=\"mp3\"\n)\n\nassert file_info.name == \"test.mp3\"\nassert file_info.is_directory == False\nassert file_info.size_str == \"1.5 MB\"\nassert file_info.modified_str == \"Just now\"\nassert file_info.file_type == FileType.AUDIO\n\n# Test directory\ndir_info = FileInfo(\n    name=\"folder\",\n    path=\"/path/to/folder\",\n    is_directory=True\n)\nassert dir_info.is_directory == True\nassert dir_info.size_str == \"\"  # No size for directories by default\n\nprint(\"FileInfo tests passed!\")\n\nFileInfo tests passed!",
+    "crumbs": [
+      "core",
+      "Models"
+    ]
+  },
+  {
+    "objectID": "core/models.html#directoryinfo",
+    "href": "core/models.html#directoryinfo",
+    "title": "Models",
+    "section": "DirectoryInfo",
+    "text": "DirectoryInfo\nMetadata for a directory with optional computed statistics.\n\n\nDirectoryInfo\n\ndef DirectoryInfo(\n    path:str, name:str, item_count:Optional=None, total_size:Optional=None, file_count:Optional=None,\n    directory_count:Optional=None\n)-&gt;None:\n\nMetadata for a directory with optional computed statistics.\n\n# Test DirectoryInfo\ndir_info = DirectoryInfo(\n    path=\"/path/to/folder\",\n    name=\"folder\",\n    item_count=10,\n    total_size=1073741824,  # 1 GB\n    file_count=50,\n    directory_count=5\n)\n\nassert dir_info.name == \"folder\"\nassert dir_info.item_count == 10\nassert dir_info.total_size_str == \"1.0 GB\"\nassert dir_info.file_count == 50\n\n# Test without stats\ndir_info_minimal = DirectoryInfo(path=\"/path\", name=\"path\")\nassert dir_info_minimal.total_size_str == \"\"\n\nprint(\"DirectoryInfo tests passed!\")\n\nDirectoryInfo tests passed!",
+    "crumbs": [
+      "core",
+      "Models"
+    ]
+  },
+  {
+    "objectID": "utils/formatting.html",
+    "href": "utils/formatting.html",
+    "title": "Formatting Utilities",
+    "section": "",
+    "text": "def format_file_size(\n    size_bytes:int, # Size in bytes\n)-&gt;str: # Human-readable size string (e.g., \"15.2 MB\")\n\nFormat file size in human-readable format.\n\n# Test format_file_size\nassert format_file_size(0) == \"0 B\"\nassert format_file_size(512) == \"512 B\"\nassert format_file_size(1024) == \"1.0 KB\"\nassert format_file_size(1536) == \"1.5 KB\"\nassert format_file_size(1048576) == \"1.0 MB\"\nassert format_file_size(1572864) == \"1.5 MB\"\nassert format_file_size(1073741824) == \"1.0 GB\"\nprint(\"format_file_size tests passed!\")\n\nformat_file_size tests passed!",
+    "crumbs": [
+      "utils",
+      "Formatting Utilities"
+    ]
+  },
+  {
+    "objectID": "utils/formatting.html#file-size-formatting",
+    "href": "utils/formatting.html#file-size-formatting",
+    "title": "Formatting Utilities",
+    "section": "",
+    "text": "def format_file_size(\n    size_bytes:int, # Size in bytes\n)-&gt;str: # Human-readable size string (e.g., \"15.2 MB\")\n\nFormat file size in human-readable format.\n\n# Test format_file_size\nassert format_file_size(0) == \"0 B\"\nassert format_file_size(512) == \"512 B\"\nassert format_file_size(1024) == \"1.0 KB\"\nassert format_file_size(1536) == \"1.5 KB\"\nassert format_file_size(1048576) == \"1.0 MB\"\nassert format_file_size(1572864) == \"1.5 MB\"\nassert format_file_size(1073741824) == \"1.0 GB\"\nprint(\"format_file_size tests passed!\")\n\nformat_file_size tests passed!",
+    "crumbs": [
+      "utils",
+      "Formatting Utilities"
+    ]
+  },
+  {
+    "objectID": "utils/formatting.html#timestamp-formatting",
+    "href": "utils/formatting.html#timestamp-formatting",
+    "title": "Formatting Utilities",
+    "section": "Timestamp Formatting",
+    "text": "Timestamp Formatting\n\n\nformat_timestamp\n\ndef format_timestamp(\n    timestamp:float, # Unix timestamp\n)-&gt;str: # Human-readable date string\n\nFormat timestamp to human-readable date with relative time for recent files.\n\nimport time\n\n# Test format_timestamp with current time\nnow = time.time()\nassert format_timestamp(now) == \"Just now\"\nassert format_timestamp(now - 120) == \"2 minutes ago\"  # 2 minutes ago\nassert format_timestamp(now - 7200) == \"2 hours ago\"   # 2 hours ago\n\n# Test invalid timestamp\nassert format_timestamp(-999999999999999) == \"Unknown\"\n\nprint(\"format_timestamp tests passed!\")\n\nformat_timestamp tests passed!",
+    "crumbs": [
+      "utils",
+      "Formatting Utilities"
+    ]
+  },
+  {
+    "objectID": "utils/formatting.html#pattern-matching",
+    "href": "utils/formatting.html#pattern-matching",
+    "title": "Formatting Utilities",
+    "section": "Pattern Matching",
+    "text": "Pattern Matching\n\n\nmatches_glob_patterns\n\ndef matches_glob_patterns(\n    path:str, # File path to check\n    patterns:List, # List of glob patterns to match against\n)-&gt;bool: # True if path matches any pattern\n\nCheck if path matches any of the glob patterns.\n\n# Test matches_glob_patterns\nassert matches_glob_patterns(\"/path/to/file.py\", [\"*.py\"]) == True\nassert matches_glob_patterns(\"/path/to/file.py\", [\"*.txt\"]) == False\nassert matches_glob_patterns(\"/path/to/file.py\", [\"*.txt\", \"*.py\"]) == True\nassert matches_glob_patterns(\"file.py\", [\"*.py\"]) == True\nassert matches_glob_patterns(\"/path/to/.hidden\", [\".*\"]) == True\nassert matches_glob_patterns(\"/path/to/file.py\", []) == False\n\nprint(\"matches_glob_patterns tests passed!\")\n\nmatches_glob_patterns tests passed!",
+    "crumbs": [
+      "utils",
+      "Formatting Utilities"
+    ]
+  },
+  {
+    "objectID": "utils/formatting.html#mime-type-detection",
+    "href": "utils/formatting.html#mime-type-detection",
+    "title": "Formatting Utilities",
+    "section": "MIME Type Detection",
+    "text": "MIME Type Detection\n\n\nget_mime_type\n\ndef get_mime_type(\n    path:str, # File path to check\n)-&gt;Optional: # MIME type string or None if unknown\n\nDetermine MIME type for a file based on extension.\n\n# Test get_mime_type\nassert get_mime_type(\"file.py\") == \"text/x-python\"\nassert get_mime_type(\"file.json\") == \"application/json\"\nassert get_mime_type(\"file.mp3\") == \"audio/mpeg\"\nassert get_mime_type(\"file.mp4\") == \"video/mp4\"\nassert get_mime_type(\"file.png\") == \"image/png\"\nassert get_mime_type(\"file.unknown_extension\") is None\n\nprint(\"get_mime_type tests passed!\")\n\nget_mime_type tests passed!",
+    "crumbs": [
+      "utils",
+      "Formatting Utilities"
+    ]
+  },
+  {
+    "objectID": "core/config.html",
+    "href": "core/config.html",
+    "title": "Configuration",
+    "section": "",
+    "text": "Maps file extensions to FileType categories. Used to automatically categorize files based on their extension.\n\n\n\n\ndef ExtensionMapping(\n    audio:List=&lt;factory&gt;, video:List=&lt;factory&gt;, image:List=&lt;factory&gt;, document:List=&lt;factory&gt;, code:List=&lt;factory&gt;,\n    data:List=&lt;factory&gt;, archive:List=&lt;factory&gt;\n)-&gt;None:\n\nMaps file extensions to FileType categories.\n\n# Test ExtensionMapping\nmapping = ExtensionMapping()\n\nassert mapping.get_type(\"mp3\") == FileType.AUDIO\nassert mapping.get_type(\".MP3\") == FileType.AUDIO  # Case insensitive, with dot\nassert mapping.get_type(\"mp4\") == FileType.VIDEO\nassert mapping.get_type(\"png\") == FileType.IMAGE\nassert mapping.get_type(\"pdf\") == FileType.DOCUMENT\nassert mapping.get_type(\"py\") == FileType.CODE\nassert mapping.get_type(\"json\") == FileType.DATA\nassert mapping.get_type(\"zip\") == FileType.ARCHIVE\nassert mapping.get_type(\"unknown\") == FileType.OTHER\n\next_map = mapping.build_extension_map()\nassert \"mp3\" in ext_map\nassert ext_map[\"mp3\"] == FileType.AUDIO\n\nall_exts = mapping.get_all_extensions()\nassert \"mp3\" in all_exts\nassert \"mp4\" in all_exts\nassert len(all_exts) &gt; 50  # Should have many extensions\n\nprint(\"ExtensionMapping tests passed!\")\n\nExtensionMapping tests passed!",
+    "crumbs": [
+      "core",
+      "Configuration"
+    ]
+  },
+  {
+    "objectID": "core/config.html#extensionmapping",
+    "href": "core/config.html#extensionmapping",
+    "title": "Configuration",
+    "section": "",
+    "text": "Maps file extensions to FileType categories. Used to automatically categorize files based on their extension.\n\n\n\n\ndef ExtensionMapping(\n    audio:List=&lt;factory&gt;, video:List=&lt;factory&gt;, image:List=&lt;factory&gt;, document:List=&lt;factory&gt;, code:List=&lt;factory&gt;,\n    data:List=&lt;factory&gt;, archive:List=&lt;factory&gt;\n)-&gt;None:\n\nMaps file extensions to FileType categories.\n\n# Test ExtensionMapping\nmapping = ExtensionMapping()\n\nassert mapping.get_type(\"mp3\") == FileType.AUDIO\nassert mapping.get_type(\".MP3\") == FileType.AUDIO  # Case insensitive, with dot\nassert mapping.get_type(\"mp4\") == FileType.VIDEO\nassert mapping.get_type(\"png\") == FileType.IMAGE\nassert mapping.get_type(\"pdf\") == FileType.DOCUMENT\nassert mapping.get_type(\"py\") == FileType.CODE\nassert mapping.get_type(\"json\") == FileType.DATA\nassert mapping.get_type(\"zip\") == FileType.ARCHIVE\nassert mapping.get_type(\"unknown\") == FileType.OTHER\n\next_map = mapping.build_extension_map()\nassert \"mp3\" in ext_map\nassert ext_map[\"mp3\"] == FileType.AUDIO\n\nall_exts = mapping.get_all_extensions()\nassert \"mp3\" in all_exts\nassert \"mp4\" in all_exts\nassert len(all_exts) &gt; 50  # Should have many extensions\n\nprint(\"ExtensionMapping tests passed!\")\n\nExtensionMapping tests passed!",
+    "crumbs": [
+      "core",
+      "Configuration"
+    ]
+  },
+  {
+    "objectID": "core/config.html#filterconfig",
+    "href": "core/config.html#filterconfig",
+    "title": "Configuration",
+    "section": "FilterConfig",
+    "text": "FilterConfig\nConfiguration for filtering files during discovery.\n\n\nFilterConfig\n\ndef FilterConfig(\n    extensions:Optional=None, exclude_extensions:Optional=None, file_types:Optional=None, min_size:Optional=None,\n    max_size:Optional=None, exclude_patterns:List=&lt;factory&gt;, include_hidden:bool=False, custom_filter:Optional=None\n)-&gt;None:\n\nConfiguration for filtering files during discovery.\n\n# Test FilterConfig\nfilter_cfg = FilterConfig(extensions=['py', 'js'])\npy_file = FileInfo(name=\"test.py\", path=\"/test.py\", is_directory=False, extension=\"py\")\ntxt_file = FileInfo(name=\"test.txt\", path=\"/test.txt\", is_directory=False, extension=\"txt\")\n\nassert filter_cfg.matches(py_file) == True\nassert filter_cfg.matches(txt_file) == False\n\n# Test file type filter\ntype_filter = FilterConfig(file_types=[FileType.AUDIO, FileType.VIDEO])\naudio_file = FileInfo(name=\"song.mp3\", path=\"/song.mp3\", is_directory=False, file_type=FileType.AUDIO)\nimage_file = FileInfo(name=\"pic.png\", path=\"/pic.png\", is_directory=False, file_type=FileType.IMAGE)\n\nassert type_filter.matches(audio_file) == True\nassert type_filter.matches(image_file) == False\n\n# Test size filter\nsize_filter = FilterConfig(min_size=1000, max_size=10000)\nsmall_file = FileInfo(name=\"small.txt\", path=\"/small.txt\", is_directory=False, size=500)\nmedium_file = FileInfo(name=\"medium.txt\", path=\"/medium.txt\", is_directory=False, size=5000)\nlarge_file = FileInfo(name=\"large.txt\", path=\"/large.txt\", is_directory=False, size=50000)\n\nassert size_filter.matches(small_file) == False\nassert size_filter.matches(medium_file) == True\nassert size_filter.matches(large_file) == False\n\n# Test hidden files\nhidden_filter = FilterConfig(include_hidden=False)\nhidden_file = FileInfo(name=\".hidden\", path=\"/.hidden\", is_directory=False)\nnormal_file = FileInfo(name=\"normal.txt\", path=\"/normal.txt\", is_directory=False)\n\nassert hidden_filter.matches(hidden_file) == False\nassert hidden_filter.matches(normal_file) == True\n\n# Test include hidden\nhidden_filter_include = FilterConfig(include_hidden=True)\nassert hidden_filter_include.matches(hidden_file) == True\n\nprint(\"FilterConfig tests passed!\")\n\nFilterConfig tests passed!",
+    "crumbs": [
+      "core",
+      "Configuration"
+    ]
+  },
+  {
+    "objectID": "core/config.html#scanconfig",
+    "href": "core/config.html#scanconfig",
+    "title": "Configuration",
+    "section": "ScanConfig",
+    "text": "ScanConfig\nMain configuration for file scanning operations.\n\n\nScanConfig\n\ndef ScanConfig(\n    directories:List=&lt;factory&gt;, recursive:bool=True, max_depth:Optional=None, follow_symlinks:bool=False,\n    filter_config:FilterConfig=&lt;factory&gt;, extension_mapping:ExtensionMapping=&lt;factory&gt;, cache_results:bool=True,\n    cache_duration_seconds:int=300, max_results:Optional=None, sort_by:str='name', sort_descending:bool=False\n)-&gt;None:\n\nMain configuration for file scanning operations.\n\n# Test ScanConfig\nconfig = ScanConfig(\n    directories=[\"/home/user/documents\", \"/home/user/downloads\"],\n    recursive=True,\n    max_depth=3,\n    filter_config=FilterConfig(extensions=['pdf', 'doc']),\n    cache_duration_seconds=600,\n    sort_by=\"modified\"\n)\n\nassert len(config.directories) == 2\nassert config.recursive == True\nassert config.max_depth == 3\nassert config.filter_config.extensions == ['pdf', 'doc']\nassert config.cache_duration_seconds == 600\nassert config.sort_by == \"modified\"\n\n# Test default values\ndefault_config = ScanConfig()\nassert default_config.directories == []\nassert default_config.recursive == True\nassert default_config.max_depth is None\nassert default_config.cache_results == True\nassert default_config.sort_by == \"name\"\n\nprint(\"ScanConfig tests passed!\")\n\nScanConfig tests passed!",
+    "crumbs": [
+      "core",
+      "Configuration"
+    ]
+  },
+  {
+    "objectID": "core/protocols.html",
+    "href": "core/protocols.html",
+    "title": "Protocols",
+    "section": "",
+    "text": "Abstract interface for file discovery backends. Implement this protocol to support different file systems (local, S3, Google Drive, etc.).\n\n\n\n\ndef DiscoveryProvider(\n    args:VAR_POSITIONAL, kwargs:VAR_KEYWORD\n):\n\nProtocol for file discovery backends.\n\n# Test that protocol is runtime checkable\nclass MockProvider:\n    \"\"\"Mock provider for testing protocol.\"\"\"\n    @property\n    def name(self) -&gt; str:\n        return \"mock\"\n    \n    def scan(self, directories, config):\n        return []\n    \n    async def scan_async(self, directories, config):\n        return []\n    \n    def get_file_info(self, path):\n        return None\n    \n    def supports_path(self, path):\n        return True\n\n# Protocol check works\nmock = MockProvider()\nassert isinstance(mock, DiscoveryProvider)\n\n# Non-implementing class fails check\nclass NotAProvider:\n    pass\n\nassert not isinstance(NotAProvider(), DiscoveryProvider)\n\nprint(\"DiscoveryProvider protocol tests passed!\")\n\nDiscoveryProvider protocol tests passed!",
+    "crumbs": [
+      "core",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "core/protocols.html#discoveryprovider-protocol",
+    "href": "core/protocols.html#discoveryprovider-protocol",
+    "title": "Protocols",
+    "section": "",
+    "text": "Abstract interface for file discovery backends. Implement this protocol to support different file systems (local, S3, Google Drive, etc.).\n\n\n\n\ndef DiscoveryProvider(\n    args:VAR_POSITIONAL, kwargs:VAR_KEYWORD\n):\n\nProtocol for file discovery backends.\n\n# Test that protocol is runtime checkable\nclass MockProvider:\n    \"\"\"Mock provider for testing protocol.\"\"\"\n    @property\n    def name(self) -&gt; str:\n        return \"mock\"\n    \n    def scan(self, directories, config):\n        return []\n    \n    async def scan_async(self, directories, config):\n        return []\n    \n    def get_file_info(self, path):\n        return None\n    \n    def supports_path(self, path):\n        return True\n\n# Protocol check works\nmock = MockProvider()\nassert isinstance(mock, DiscoveryProvider)\n\n# Non-implementing class fails check\nclass NotAProvider:\n    pass\n\nassert not isinstance(NotAProvider(), DiscoveryProvider)\n\nprint(\"DiscoveryProvider protocol tests passed!\")\n\nDiscoveryProvider protocol tests passed!",
+    "crumbs": [
+      "core",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "scanning/filters.html",
+    "href": "scanning/filters.html",
+    "title": "Filters",
+    "section": "",
+    "text": "Helper functions for filtering file lists.\n\n\n\n\ndef filter_files(\n    files:List, # Files to filter\n    config:FilterConfig, # Filter configuration\n)-&gt;List: # Filtered files\n\nFilter a list of files using FilterConfig.\n\n# Test filter_files\ntest_files = [\n    FileInfo(name=\"doc.py\", path=\"/doc.py\", is_directory=False, extension=\"py\", file_type=FileType.CODE),\n    FileInfo(name=\"song.mp3\", path=\"/song.mp3\", is_directory=False, extension=\"mp3\", file_type=FileType.AUDIO),\n    FileInfo(name=\"pic.png\", path=\"/pic.png\", is_directory=False, extension=\"png\", file_type=FileType.IMAGE),\n    FileInfo(name=\".hidden\", path=\"/.hidden\", is_directory=False),\n]\n\n# Filter by extension\npy_filter = FilterConfig(extensions=['py'])\nresult = filter_files(test_files, py_filter)\nassert len(result) == 1\nassert result[0].name == \"doc.py\"\n\n# Filter by file type\naudio_filter = FilterConfig(file_types=[FileType.AUDIO])\nresult = filter_files(test_files, audio_filter)\nassert len(result) == 1\nassert result[0].name == \"song.mp3\"\n\n# No filter (but exclude hidden)\nno_filter = FilterConfig(include_hidden=False)\nresult = filter_files(test_files, no_filter)\nassert len(result) == 3  # .hidden excluded\n\nprint(\"filter_files tests passed!\")\n\nfilter_files tests passed!",
+    "crumbs": [
+      "scanning",
+      "Filters"
+    ]
+  },
+  {
+    "objectID": "scanning/filters.html#filter-functions",
+    "href": "scanning/filters.html#filter-functions",
+    "title": "Filters",
+    "section": "",
+    "text": "Helper functions for filtering file lists.\n\n\n\n\ndef filter_files(\n    files:List, # Files to filter\n    config:FilterConfig, # Filter configuration\n)-&gt;List: # Filtered files\n\nFilter a list of files using FilterConfig.\n\n# Test filter_files\ntest_files = [\n    FileInfo(name=\"doc.py\", path=\"/doc.py\", is_directory=False, extension=\"py\", file_type=FileType.CODE),\n    FileInfo(name=\"song.mp3\", path=\"/song.mp3\", is_directory=False, extension=\"mp3\", file_type=FileType.AUDIO),\n    FileInfo(name=\"pic.png\", path=\"/pic.png\", is_directory=False, extension=\"png\", file_type=FileType.IMAGE),\n    FileInfo(name=\".hidden\", path=\"/.hidden\", is_directory=False),\n]\n\n# Filter by extension\npy_filter = FilterConfig(extensions=['py'])\nresult = filter_files(test_files, py_filter)\nassert len(result) == 1\nassert result[0].name == \"doc.py\"\n\n# Filter by file type\naudio_filter = FilterConfig(file_types=[FileType.AUDIO])\nresult = filter_files(test_files, audio_filter)\nassert len(result) == 1\nassert result[0].name == \"song.mp3\"\n\n# No filter (but exclude hidden)\nno_filter = FilterConfig(include_hidden=False)\nresult = filter_files(test_files, no_filter)\nassert len(result) == 3  # .hidden excluded\n\nprint(\"filter_files tests passed!\")\n\nfilter_files tests passed!",
+    "crumbs": [
+      "scanning",
+      "Filters"
+    ]
+  },
+  {
+    "objectID": "scanning/filters.html#sorting-functions",
+    "href": "scanning/filters.html#sorting-functions",
+    "title": "Filters",
+    "section": "Sorting Functions",
+    "text": "Sorting Functions\nHelper functions for sorting file lists.\n\n\nsort_files\n\ndef sort_files(\n    files:List, # Files to sort\n    sort_by:str='name', # Sort key: \"name\", \"size\", \"modified\", \"type\"\n    descending:bool=False, # Sort in descending order\n)-&gt;List: # Sorted files\n\nSort a list of files by the specified key.\n\nimport time\n\n# Test sort_files\nnow = time.time()\ntest_files = [\n    FileInfo(name=\"zebra.txt\", path=\"/zebra.txt\", is_directory=False, size=100, modified=now-100),\n    FileInfo(name=\"apple.txt\", path=\"/apple.txt\", is_directory=False, size=500, modified=now-50),\n    FileInfo(name=\"mango.txt\", path=\"/mango.txt\", is_directory=False, size=200, modified=now),\n]\n\n# Sort by name (ascending)\nresult = sort_files(test_files, sort_by=\"name\", descending=False)\nassert [f.name for f in result] == [\"apple.txt\", \"mango.txt\", \"zebra.txt\"]\n\n# Sort by name (descending)\nresult = sort_files(test_files, sort_by=\"name\", descending=True)\nassert [f.name for f in result] == [\"zebra.txt\", \"mango.txt\", \"apple.txt\"]\n\n# Sort by size\nresult = sort_files(test_files, sort_by=\"size\", descending=False)\nassert [f.name for f in result] == [\"zebra.txt\", \"mango.txt\", \"apple.txt\"]\n\n# Sort by modified (most recent first)\nresult = sort_files(test_files, sort_by=\"modified\", descending=True)\nassert result[0].name == \"mango.txt\"  # Most recently modified\n\nprint(\"sort_files tests passed!\")\n\nsort_files tests passed!",
+    "crumbs": [
+      "scanning",
+      "Filters"
+    ]
+  },
+  {
+    "objectID": "scanning/filters.html#utility-functions",
+    "href": "scanning/filters.html#utility-functions",
+    "title": "Filters",
+    "section": "Utility Functions",
+    "text": "Utility Functions\n\n\nlimit_files\n\ndef limit_files(\n    files:List, # Files to limit\n    max_results:Optional, # Maximum number of results (None = no limit)\n)-&gt;List: # Limited file list\n\nLimit the number of files returned.\n\n# Test limit_files\ntest_files = [FileInfo(name=f\"file{i}.txt\", path=f\"/file{i}.txt\", is_directory=False) for i in range(10)]\n\nassert len(limit_files(test_files, None)) == 10  # No limit\nassert len(limit_files(test_files, 5)) == 5\nassert len(limit_files(test_files, 20)) == 10  # Limit greater than list size\nassert len(limit_files(test_files, 0)) == 0\n\nprint(\"limit_files tests passed!\")\n\nlimit_files tests passed!",
+    "crumbs": [
+      "scanning",
+      "Filters"
+    ]
+  },
+  {
+    "objectID": "providers/local.html",
+    "href": "providers/local.html",
+    "title": "Local Provider",
+    "section": "",
+    "text": "Local file system implementation of the DiscoveryProvider protocol.\n\n\n\n\ndef LocalDiscoveryProvider(\n    args:VAR_POSITIONAL, kwargs:VAR_KEYWORD\n):\n\nLocal file system discovery provider.\n\nimport tempfile\nimport os\n\nfrom cjm_file_discovery.core.config import ScanConfig, FilterConfig\n\n# Test LocalDiscoveryProvider\nprovider = LocalDiscoveryProvider()\n\n# Test supports_path\nassert provider.supports_path(\"/home/user/file.txt\") == True\nassert provider.supports_path(\"s3://bucket/file.txt\") == False\nassert provider.supports_path(\"https://example.com/file.txt\") == False\n\n# Test get_file_info with a real file\nwith tempfile.NamedTemporaryFile(suffix=\".txt\", delete=False) as f:\n    f.write(b\"test content\")\n    temp_path = f.name\n\ntry:\n    info = provider.get_file_info(temp_path)\n    assert info is not None\n    assert info.name.endswith(\".txt\")\n    assert info.is_directory == False\n    assert info.size == 12  # \"test content\" is 12 bytes\n    assert info.extension == \"txt\"\n    assert info.file_type == FileType.DOCUMENT\n    assert info.provider_name == \"local\"\nfinally:\n    os.unlink(temp_path)\n\n# Test get_file_info with non-existent file\nassert provider.get_file_info(\"/non/existent/path/file.xyz\") is None\n\n# Test scan with a temporary directory\nwith tempfile.TemporaryDirectory() as tmpdir:\n    # Create some test files\n    (Path(tmpdir) / \"file1.py\").write_text(\"print('hello')\")\n    (Path(tmpdir) / \"file2.txt\").write_text(\"hello\")\n    (Path(tmpdir) / \"subdir\").mkdir()\n    (Path(tmpdir) / \"subdir\" / \"file3.json\").write_text(\"{}\")\n    \n    # Scan all files\n    config = ScanConfig(directories=[tmpdir], recursive=True)\n    files = provider.scan([tmpdir], config)\n    assert len(files) == 3\n    \n    # Scan with filter\n    config_py = ScanConfig(\n        directories=[tmpdir],\n        recursive=True,\n        filter_config=FilterConfig(extensions=['py'])\n    )\n    files = provider.scan([tmpdir], config_py)\n    assert len(files) == 1\n    assert files[0].extension == \"py\"\n    \n    # Scan non-recursive\n    config_flat = ScanConfig(directories=[tmpdir], recursive=False)\n    files = provider.scan([tmpdir], config_flat)\n    assert len(files) == 2  # Only files in root, not subdir\n\nprint(\"LocalDiscoveryProvider tests passed!\")\n\nLocalDiscoveryProvider tests passed!\n\n\n\nfrom cjm_file_discovery.core.protocols import DiscoveryProvider\n\n# Verify LocalDiscoveryProvider implements the protocol\nassert isinstance(LocalDiscoveryProvider(), DiscoveryProvider)\nprint(\"Protocol implementation verified!\")\n\nProtocol implementation verified!",
+    "crumbs": [
+      "providers",
+      "Local Provider"
+    ]
+  },
+  {
+    "objectID": "providers/local.html#localdiscoveryprovider",
+    "href": "providers/local.html#localdiscoveryprovider",
+    "title": "Local Provider",
+    "section": "",
+    "text": "Local file system implementation of the DiscoveryProvider protocol.\n\n\n\n\ndef LocalDiscoveryProvider(\n    args:VAR_POSITIONAL, kwargs:VAR_KEYWORD\n):\n\nLocal file system discovery provider.\n\nimport tempfile\nimport os\n\nfrom cjm_file_discovery.core.config import ScanConfig, FilterConfig\n\n# Test LocalDiscoveryProvider\nprovider = LocalDiscoveryProvider()\n\n# Test supports_path\nassert provider.supports_path(\"/home/user/file.txt\") == True\nassert provider.supports_path(\"s3://bucket/file.txt\") == False\nassert provider.supports_path(\"https://example.com/file.txt\") == False\n\n# Test get_file_info with a real file\nwith tempfile.NamedTemporaryFile(suffix=\".txt\", delete=False) as f:\n    f.write(b\"test content\")\n    temp_path = f.name\n\ntry:\n    info = provider.get_file_info(temp_path)\n    assert info is not None\n    assert info.name.endswith(\".txt\")\n    assert info.is_directory == False\n    assert info.size == 12  # \"test content\" is 12 bytes\n    assert info.extension == \"txt\"\n    assert info.file_type == FileType.DOCUMENT\n    assert info.provider_name == \"local\"\nfinally:\n    os.unlink(temp_path)\n\n# Test get_file_info with non-existent file\nassert provider.get_file_info(\"/non/existent/path/file.xyz\") is None\n\n# Test scan with a temporary directory\nwith tempfile.TemporaryDirectory() as tmpdir:\n    # Create some test files\n    (Path(tmpdir) / \"file1.py\").write_text(\"print('hello')\")\n    (Path(tmpdir) / \"file2.txt\").write_text(\"hello\")\n    (Path(tmpdir) / \"subdir\").mkdir()\n    (Path(tmpdir) / \"subdir\" / \"file3.json\").write_text(\"{}\")\n    \n    # Scan all files\n    config = ScanConfig(directories=[tmpdir], recursive=True)\n    files = provider.scan([tmpdir], config)\n    assert len(files) == 3\n    \n    # Scan with filter\n    config_py = ScanConfig(\n        directories=[tmpdir],\n        recursive=True,\n        filter_config=FilterConfig(extensions=['py'])\n    )\n    files = provider.scan([tmpdir], config_py)\n    assert len(files) == 1\n    assert files[0].extension == \"py\"\n    \n    # Scan non-recursive\n    config_flat = ScanConfig(directories=[tmpdir], recursive=False)\n    files = provider.scan([tmpdir], config_flat)\n    assert len(files) == 2  # Only files in root, not subdir\n\nprint(\"LocalDiscoveryProvider tests passed!\")\n\nLocalDiscoveryProvider tests passed!\n\n\n\nfrom cjm_file_discovery.core.protocols import DiscoveryProvider\n\n# Verify LocalDiscoveryProvider implements the protocol\nassert isinstance(LocalDiscoveryProvider(), DiscoveryProvider)\nprint(\"Protocol implementation verified!\")\n\nProtocol implementation verified!",
+    "crumbs": [
+      "providers",
+      "Local Provider"
+    ]
+  }
+]
